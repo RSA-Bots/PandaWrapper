@@ -9,7 +9,7 @@ try {
 	const token = (JSON.parse(readFileSync("token.json", "utf-8")) as { token: string }).token;
 
 	if (token.length === 0) {
-		throw new Error("Invalid token provided. Please be sure that `auth.json` contains your bot token.");
+		throw new Error("Invalid token provided. Please be sure that `token.json` contains your bot token.");
 	}
 
 	const client = new Client({
