@@ -1,25 +1,20 @@
-import { Client, Intents } from "discord.js";
 import { readFileSync } from "fs";
+import { initClient } from "./client/client";
+import { connectDatabase } from "./db/database";
+import type { ApplicationData } from "./interface/applicationData";
+import { getReqDb, loadConfig } from "./util/config";
 
-function main(client: Client) {
-	client.once("ready", () => console.log("Client logged in."));
+const applicationData = JSON.parse(readFileSync("token.json", "utf-8")) as ApplicationData;
+
+loadConfig(applicationData);
+
+const dbRequired = getReqDb();
+let dbConnected = false;
+
+if (dbRequired) {
+	dbConnected = connectDatabase();
 }
 
-try {
-	const token = (JSON.parse(readFileSync("auth.json", "utf-8")) as { token: string }).token;
+if (dbRequired && !dbConnected) throw new Error("Failed to connect to required database.");
 
-	if (token.length === 0) {
-		throw new Error("Invalid token provided. Please be sure that `auth.json` contains your bot token.");
-	}
-
-	const client = new Client({
-		intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MEMBERS],
-	});
-
-	client
-		.login(token)
-		.then(() => main(client))
-		.catch(console.error.bind(console));
-} catch (e) {
-	console.error(e);
-}
+initClient();
