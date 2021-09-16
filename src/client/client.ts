@@ -1,12 +1,18 @@
-import { Client, CommandInteraction, Intents, Message } from "discord.js";
+import { Client, CommandInteraction, ContextMenuInteraction, Intents, Message } from "discord.js";
 import { initializeInteractionEvent } from "../interactions/interactionHandler";
-import { pushPayload } from "../interactions/payloadHandler";
+import { pushPayloads } from "../interactions/payloadHandler";
+import { registerContextMenu } from "../registers/contextMenuRegister";
 import { registerEvent } from "../registers/eventRegister";
 import { registerMessageCommand } from "../registers/messageCommandRegister";
-import { registerGuildSlashCommand } from "../registers/slashCommandRegister";
+import { registerSlashCommand } from "../registers/slashCommandRegister";
 import { getToken } from "../util/config";
 
 let instanceClient: Client | undefined;
+
+enum ContextMenuType {
+	USER = "USER",
+	MESSAGE = "MESSAGE",
+}
 
 function createClient(intents?: number[]): Client {
 	if (!intents) {
@@ -31,8 +37,8 @@ function registerEvents(): void {
 	registerEvent("ready", true, () => {
 		console.log("Client logged in.");
 		registerSlashCommands();
-		//registerContextMenus();
-		pushPayload("848412523526488114");
+		registerContextMenus();
+		pushPayloads();
 		initializeInteractionEvent();
 	});
 }
@@ -44,13 +50,32 @@ function registerMessageCommands(): void {
 }
 
 function registerSlashCommands(): void {
-	registerGuildSlashCommand(
+	registerSlashCommand(
 		"test",
 		{ name: "test", description: "Hello world!" },
-		"848412523526488114",
 		(interaction: CommandInteraction) => {
 			interaction.reply("F").catch(console.error.bind(console));
+		},
+		"848412523526488114"
+	);
+
+	registerSlashCommand(
+		"globaltest",
+		{ name: "globaltest", description: "Hello World!" },
+		(interaction: CommandInteraction) => {
+			interaction.reply("A").catch(console.error.bind(console));
 		}
+	);
+}
+
+function registerContextMenus(): void {
+	registerContextMenu(
+		"contexttest",
+		{ name: "contexttest", type: ContextMenuType.MESSAGE },
+		(interaction: ContextMenuInteraction) => {
+			interaction.reply("B").catch(console.error.bind(console));
+		},
+		"848412523526488114"
 	);
 }
 

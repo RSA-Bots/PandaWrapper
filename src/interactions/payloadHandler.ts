@@ -15,37 +15,28 @@ export function addGlobalPayload(commandData: ApplicationCommandData): void {
 	globalPayload.push(commandData);
 }
 
-export function pushPayload(guildId?: string): void {
+export function pushPayloads(): void {
 	const client = getClient();
-
-	if (guildId) {
-		if (guildPayload[guildId]) {
-			const cachedGuild = client.guilds.cache.get(guildId);
-
-			if (!cachedGuild) {
-				console.log("Not cached.");
-				client.guilds
-					.fetch(guildId)
-					.then(guild => {
-						const commands = guild.commands;
-						if (commands) {
-							commands.set(guildPayload[guildId]).catch(console.error.bind(console));
-						} else {
-							console.warn(`Failed to set commands for ${guildId}`);
-						}
-					})
-					.catch(console.error.bind(console));
-			} else {
-				console.log("Cached.");
-				cachedGuild.commands.set(guildPayload[guildId]).catch(console.error.bind(console));
-			}
-		}
+	const app = client.application;
+	if (!app) {
+		console.error("Failed to fetch ClientApplication. Not sending global payload.");
 	} else {
-		const app = client.application;
-		if (!app) throw new Error("Could not fetch ClientApplication.");
-
 		app.commands.set(globalPayload).catch(console.error.bind(console));
 	}
+
+	client.guilds.cache.forEach(guild => {
+		const guildId = guild.id;
+		const payload = guildPayload[guildId];
+
+		if (payload) {
+			const commands = guild.commands;
+			if (commands) {
+				commands.set(guildPayload[guildId]).catch(console.error.bind(console));
+			} else {
+				console.warn(`Failed to set commands for ${guildId}`);
+			}
+		}
+	});
 }
 
 export function getHasPushed(): boolean {
