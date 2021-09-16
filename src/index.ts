@@ -17,4 +17,4 @@ if (dbRequired) {
 
 if (dbRequired && !dbConnected) throw new Error("Failed to connect to required database.");
 
-initClient();
+void initClient();

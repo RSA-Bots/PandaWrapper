@@ -1,11 +1,10 @@
 import type { ClientEvents } from "discord.js";
 import { getClient } from "../client/client";
+import type ClientEvent from "../interface/clientEvent";
 
-export function registerEvent<K extends keyof ClientEvents>(
-	eventName: K,
-	once: boolean,
-	callback: (...args: ClientEvents[K]) => void
-): void {
+export function registerEvent(clientEvent: ClientEvent<keyof ClientEvents>): void {
+	const eventName = clientEvent.eventName;
+	const callback = clientEvent.eventCallback;
 	const client = getClient();
 
 	if (!client) throw new Error("No client instantiated.");
@@ -14,7 +13,7 @@ export function registerEvent<K extends keyof ClientEvents>(
 		return;
 	}
 
-	if (once) {
+	if (clientEvent.once) {
 		client.once(eventName, callback);
 	} else {
 		client.on(eventName, callback);

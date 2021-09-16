@@ -1,6 +1,8 @@
-import { Client, CommandInteraction, ContextMenuInteraction, Intents, Message } from "discord.js";
-import { initializeInteractionEvent } from "../interactions/interactionHandler";
-import { pushPayloads } from "../interactions/payloadHandler";
+import { Client, ClientEvents, Intents, Message } from "discord.js";
+import { readdirSync } from "fs";
+import type ClientEvent from "../interface/clientEvent";
+import type ContextMenu from "../interface/contextMenu";
+import type SlashCommand from "../interface/slashCommand";
 import { registerContextMenu } from "../registers/contextMenuRegister";
 import { registerEvent } from "../registers/eventRegister";
 import { registerMessageCommand } from "../registers/messageCommandRegister";
@@ -8,11 +10,6 @@ import { registerSlashCommand } from "../registers/slashCommandRegister";
 import { getToken } from "../util/config";
 
 let instanceClient: Client | undefined;
-
-enum ContextMenuType {
-	USER = "USER",
-	MESSAGE = "MESSAGE",
-}
 
 function createClient(intents?: number[]): Client {
 	if (!intents) {
@@ -33,14 +30,16 @@ function loginClient(): void {
 	instanceClient.login(token).catch(console.error.bind(console));
 }
 
-function registerEvents(): void {
-	registerEvent("ready", true, () => {
-		console.log("Client logged in.");
-		registerSlashCommands();
-		registerContextMenus();
-		pushPayloads();
-		initializeInteractionEvent();
-	});
+async function registerEvents(): Promise<void> {
+	const clientEventPath = "./dist/client/events";
+	const eventFiles = readdirSync(clientEventPath).filter(file => file.endsWith(".js"));
+
+	for (const file of eventFiles) {
+		const { default: clientEvent } = (await import(`./events/${file}`)) as unknown as {
+			default: ClientEvent<keyof ClientEvents>;
+		};
+		registerEvent(clientEvent);
+	}
 }
 
 function registerMessageCommands(): void {
@@ -49,39 +48,33 @@ function registerMessageCommands(): void {
 	});
 }
 
-function registerSlashCommands(): void {
-	registerSlashCommand(
-		"test",
-		{ name: "test", description: "Hello world!" },
-		(interaction: CommandInteraction) => {
-			interaction.reply("F").catch(console.error.bind(console));
-		},
-		"848412523526488114"
-	);
+export async function registerSlashCommands(): Promise<void> {
+	const clientEventPath = "./dist/client/slashcommands";
+	const eventFiles = readdirSync(clientEventPath).filter(file => file.endsWith(".js"));
 
-	registerSlashCommand(
-		"globaltest",
-		{ name: "globaltest", description: "Hello World!" },
-		(interaction: CommandInteraction) => {
-			interaction.reply("A").catch(console.error.bind(console));
-		}
-	);
+	for (const file of eventFiles) {
+		const { default: slashCommand } = (await import(`./slashcommands/${file}`)) as unknown as {
+			default: SlashCommand;
+		};
+		registerSlashCommand(slashCommand);
+	}
 }
 
-function registerContextMenus(): void {
-	registerContextMenu(
-		"contexttest",
-		{ name: "contexttest", type: ContextMenuType.MESSAGE },
-		(interaction: ContextMenuInteraction) => {
-			interaction.reply("B").catch(console.error.bind(console));
-		},
-		"848412523526488114"
-	);
+export async function registerContextMenus(): Promise<void> {
+	const clientEventPath = "./dist/client/contextmenus";
+	const eventFiles = readdirSync(clientEventPath).filter(file => file.endsWith(".js"));
+
+	for (const file of eventFiles) {
+		const { default: contextMenu } = (await import(`./contextmenus/${file}`)) as unknown as {
+			default: ContextMenu;
+		};
+		registerContextMenu(contextMenu);
+	}
 }
 
-export function initClient(): void {
+export async function initClient(): Promise<void> {
 	createClient();
-	registerEvents();
+	await registerEvents();
 	registerMessageCommands();
 	loginClient();
 }

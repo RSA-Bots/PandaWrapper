@@ -1,13 +1,13 @@
-import type { ApplicationCommandData, CommandInteraction, Snowflake } from "discord.js";
 import { registerSlashCommandInteraction } from "../interactions/interactionHandler";
 import { addGlobalPayload, addGuildPayload, getHasPushed } from "../interactions/payloadHandler";
+import type SlashCommand from "../interface/slashCommand";
 
-export function registerSlashCommand(
-	commandName: string,
-	commandData: ApplicationCommandData,
-	callback: (interaction: CommandInteraction) => void,
-	guildId?: Snowflake
-): void {
+export function registerSlashCommand(slashCommand: SlashCommand): void {
+	const commandName = slashCommand.commandName;
+	const commandData = slashCommand.commandData;
+	const callback = slashCommand.commandCallback;
+	const guildId = slashCommand.guildId;
+
 	if (commandName.toLowerCase() != commandName) {
 		console.warn("commandName must be lowercase.");
 		return;

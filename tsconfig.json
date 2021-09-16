@@ -1,8 +1,8 @@
 {
 	"compilerOptions": {
 		"incremental": true,
-		"target": "ES6",
-		"module": "CommonJS",
+		"target": "es2017",
+		"module": "commonjs",
 		"outDir": "dist/",
 		"downlevelIteration": true,
 		"resolveJsonModule": true,

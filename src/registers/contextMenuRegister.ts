@@ -1,13 +1,13 @@
-import type { ApplicationCommandData, ContextMenuInteraction } from "discord.js";
 import { registerContextCommandInteraction } from "../interactions/interactionHandler";
 import { addGlobalPayload, addGuildPayload, getHasPushed } from "../interactions/payloadHandler";
+import type ContextMenu from "../interface/contextMenu";
 
-export function registerContextMenu(
-	commandName: string,
-	commandData: ApplicationCommandData,
-	callback: (interaction: ContextMenuInteraction) => void,
-	guildId: string
-): void {
+export function registerContextMenu(contextMenu: ContextMenu): void {
+	const commandName = contextMenu.menuName;
+	const commandData = contextMenu.menuData;
+	const callback = contextMenu.menuCallback;
+	const guildId = contextMenu.guildId;
+
 	if (commandName.toLowerCase() != commandName) {
 		console.warn("commandName must be lowercase.");
 		return;
