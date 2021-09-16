@@ -1,6 +1,6 @@
 export interface ApplicationData {
 	token: string;
-	reqDb: boolean;
+	reqDb: string;
 	dbUri: string;
 	prefix: string;
 }

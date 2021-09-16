@@ -1,29 +1,24 @@
 import type { ApplicationData } from "../interface/applicationData";
 
-let token: string | undefined;
-let reqDb: boolean | undefined;
-let dbUri: string | undefined;
-let prefix: string | undefined;
+let config: ApplicationData;
 
 export function loadConfig(applicationData: ApplicationData): void {
-	token = applicationData.token;
-	reqDb = applicationData.reqDb;
-	dbUri = applicationData.dbUri;
-	prefix = applicationData.prefix;
+	config = applicationData;
 }
 
 export function getToken(): string | undefined {
-	return token;
+	return config.token;
 }
 
 export function getReqDb(): boolean | undefined {
-	return reqDb;
+	if (config.reqDb === "true" || config.reqDb === "false") return new Boolean(config.reqDb).valueOf();
+	return undefined;
 }
 
 export function getDbUri(): string | undefined {
-	return dbUri;
+	return config.dbUri;
 }
 
 export function getPrefix(): string | undefined {
-	return prefix;
+	return config.prefix;
 }

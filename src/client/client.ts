@@ -1,6 +1,9 @@
-import { Client, Intents, Message } from "discord.js";
+import { Client, CommandInteraction, Intents, Message } from "discord.js";
+import { initializeInteractionEvent } from "../interactions/interactionHandler";
+import { pushPayload } from "../interactions/payloadHandler";
 import { registerEvent } from "../registers/eventRegister";
 import { registerMessageCommand } from "../registers/messageCommandRegister";
+import { registerGuildSlashCommand } from "../registers/slashCommandRegister";
 import { getToken } from "../util/config";
 
 let instanceClient: Client | undefined;
@@ -16,38 +19,45 @@ function createClient(intents?: number[]): Client {
 }
 
 function loginClient(): void {
-	if (!instanceClient) throw new Error("Client not instantiated.");
+	const token = getToken();
 
-	instanceClient.login(getToken()).catch(console.error.bind(console));
+	if (!instanceClient) throw new Error("Client not instantiated.");
+	if (!token) throw new Error("No token provided.");
+
+	instanceClient.login(token).catch(console.error.bind(console));
 }
 
 function registerEvents(): void {
-	registerEvent("ready", true, () => console.log("Client logged in."));
+	registerEvent("ready", true, () => {
+		console.log("Client logged in.");
+		registerSlashCommands();
+		//registerContextMenus();
+		pushPayload("848412523526488114");
+		initializeInteractionEvent();
+	});
 }
 
 function registerMessageCommands(): void {
 	registerMessageCommand("ping", (message: Message) => {
 		message.reply("PONG!").catch(console.error.bind(console));
 	});
-	registerMessageCommand("repeat", (message: Message, args: string[]) => {
-		if (args.length == 0) {
-			message.reply("Not enough args provided.").catch(console.error.bind(console));
-		} else {
-			message.reply(args[0]).catch(console.error.bind(console));
+}
+
+function registerSlashCommands(): void {
+	registerGuildSlashCommand(
+		"test",
+		{ name: "test", description: "Hello world!" },
+		"848412523526488114",
+		(interaction: CommandInteraction) => {
+			interaction.reply("F").catch(console.error.bind(console));
 		}
-	});
+	);
 }
 
 export function initClient(): void {
-	const token = getToken();
-
-	if (!token) throw new Error("No token provided.");
-
 	createClient();
 	registerEvents();
 	registerMessageCommands();
-	//registerSlashCommands();
-	//registerContextMenus();
 	loginClient();
 }
 
