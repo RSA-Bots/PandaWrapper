@@ -1,8 +1,8 @@
 import type { ApplicationCommandData, CommandInteraction } from "discord.js";
 
-export default interface SlashCommand {
-	commandName: string;
-	commandData: ApplicationCommandData;
-	commandCallback: (interaction: CommandInteraction) => void;
+export interface SlashCommand {
+	name: string;
+	data: ApplicationCommandData;
+	callback: (interaction: CommandInteraction) => void;
 	guildId?: string;
 }

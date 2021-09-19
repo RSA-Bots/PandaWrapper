@@ -11,6 +11,8 @@
 		"esModuleInterop": true,
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true,
-		"importsNotUsedAsValues": "error"
-	}
+		"importsNotUsedAsValues": "error",
+		"declaration": true
+	},
+	"include": ["src/**/*"]
 }

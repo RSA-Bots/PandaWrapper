@@ -1,13 +1,15 @@
 import type { ContextMenuInteraction } from "discord.js";
 
-export enum ContextMenuType {
+enum ContextMenuType {
 	USER = "USER",
 	MESSAGE = "MESSAGE",
 }
 
-export default interface ContextMenu {
-	menuName: string;
-	menuData: { name: string; type: ContextMenuType };
-	menuCallback: (interaction: ContextMenuInteraction) => void;
+interface ContextMenu {
+	name: string;
+	data: { name: string; type: ContextMenuType };
+	callback: (interaction: ContextMenuInteraction) => void;
 	guildId: string;
 }
+
+export { ContextMenuType, ContextMenu };
