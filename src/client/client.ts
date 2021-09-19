@@ -16,7 +16,7 @@ import { addGlobalPayload, addGuildPayload } from "./payload";
 let instanceClient: Client | undefined;
 let instancePrefix = "!";
 let hasLoggedIn = false;
-const messageCommands: { [index: string]: (message: Message, args: string[]) => void } = {};
+const messageCommands: { [index: string]: MessageCommand } = {};
 const slashCommands: { [index: string]: (interaction: CommandInteraction) => void } = {};
 const contextMenus: { [index: string]: (interaction: ContextMenuInteraction) => void } = {};
 
@@ -58,10 +58,31 @@ function loginClient(token: string): Client {
 			const command = args.shift();
 
 			if (command && command.startsWith(instancePrefix)) {
-				const messageCommandCallback = messageCommands[command.substring(instancePrefix.length)];
+				const messageCommandData = messageCommands[command.substring(instancePrefix.length)];
 
-				if (messageCommandCallback != undefined) {
-					messageCommandCallback(message, args);
+				if (messageCommandData != undefined) {
+					const author = message.member;
+					if (!author) return;
+
+					// flag check
+					const flags = messageCommandData.permissions.flags;
+					if (flags && author.permissions.toArray().some(perm => flags.has(perm)))
+						messageCommandData
+							.callback(message, args)
+							.catch(err => message.reply(String(err)).catch(console.error.bind(console)));
+
+					// role check
+					const allowed = messageCommandData.permissions.allowed;
+					const denied = messageCommandData.permissions.denied;
+
+					const hasPermission = author.roles.cache.some(role => allowed.has(role.id));
+					const isDenied = denied == undefined ? false : author.roles.cache.some(role => denied.has(role.id));
+
+					if (isDenied) return;
+					if (hasPermission)
+						messageCommandData
+							.callback(message, args)
+							.catch(err => message.reply(err).catch(console.error.bind(console)));
 				}
 			}
 		},
@@ -133,7 +154,7 @@ function registerEvent<K extends keyof ClientEvents>(event: ClientEvent<K>): Eve
  * @param command
  */
 function registerMessageCommand(command: MessageCommand): void {
-	messageCommands[command.name] = command.callback;
+	messageCommands[command.name] = command;
 }
 
 function registerSlashCommand(command: SlashCommand): void {
@@ -142,8 +163,12 @@ function registerSlashCommand(command: SlashCommand): void {
 		return;
 	}
 
+	if (command.permissions && command.permissions.permissions.length > 0) {
+		command.data.defaultPermission = false;
+	}
+
 	if (command.guildId) {
-		addGuildPayload(command.guildId, command.data);
+		addGuildPayload(command.guildId, command.data, command.permissions?.permissions);
 	} else {
 		addGlobalPayload(command.data);
 	}
