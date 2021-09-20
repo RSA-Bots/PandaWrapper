@@ -23,6 +23,7 @@ function addGlobalPayload(commandData: ApplicationCommandData): void {
 }
 
 function pushPayloads(): void {
+	console.log("Started pushing SlashCommand and ContextCommand payloads.");
 	const client = getClient();
 	if (!client) throw new Error("No client created.");
 
@@ -61,6 +62,7 @@ function pushPayloads(): void {
 			}
 		}
 	});
+	console.log("Finished pushing SlashCommand and ContextCommand payloads.");
 }
 
 export { pushPayloads, addGlobalPayload, addGuildPayload };

@@ -7,10 +7,10 @@ import {
 	Interaction,
 	Message,
 } from "discord.js";
+import { pushPayloads } from "..";
 import type { ClientEvent } from "../interface/clientEvent";
-import type { ContextMenu } from "../interface/contextMenu";
 import type { MessageCommand } from "../interface/messageCommand";
-import type { SlashCommand } from "../interface/slashCommand";
+import type { ContextCommand, SlashCommand } from "./interfaces";
 import { addGlobalPayload, addGuildPayload } from "./payload";
 
 let instanceClient: Client | undefined;
@@ -93,18 +93,37 @@ function loginClient(token: string): Client {
 		once: false,
 		callback: (interaction: Interaction) => {
 			if (interaction.isCommand()) {
+				console.log(`${interaction.commandName} fired. [slash]`);
 				const commandCallback = slashCommands[interaction.commandName];
 
 				if (commandCallback != undefined) {
 					commandCallback(interaction);
+				} else {
+					interaction
+						.reply("No callback has been assigned to this interaction.")
+						.catch(console.error.bind(console));
 				}
 			} else if (interaction.isContextMenu()) {
-				const commandCallback = slashCommands[interaction.commandName];
+				console.log(`${interaction.commandName} fired. [context]`);
+				const commandCallback = contextMenus[interaction.commandName];
 
 				if (commandCallback != undefined) {
 					commandCallback(interaction);
+				} else {
+					interaction
+						.reply("No callback has been assigned to this interaction.")
+						.catch(console.error.bind(console));
 				}
 			}
+		},
+	});
+
+	registerEvent({
+		name: "ready",
+		once: true,
+		callback: () => {
+			console.log("Client logged in.");
+			pushPayloads();
 		},
 	});
 
@@ -157,8 +176,9 @@ function registerMessageCommand(command: MessageCommand): void {
 	messageCommands[command.name] = command;
 }
 
-function registerSlashCommand(command: SlashCommand): void {
-	if (command.name.toLowerCase() != command.name) {
+function registerCommand(command: SlashCommand | ContextCommand): void {
+	const name = command.data.name;
+	if (name.toLowerCase() != name) {
 		console.warn("name must be lowercase.");
 		return;
 	}
@@ -167,26 +187,29 @@ function registerSlashCommand(command: SlashCommand): void {
 		command.data.defaultPermission = false;
 	}
 
-	if (command.guildId) {
-		addGuildPayload(command.guildId, command.data, command.permissions?.permissions);
+	if (command.guildConfig && command.guildConfig.guildId) {
+		addGuildPayload(command.guildConfig.guildId, command.data, command.permissions?.permissions);
 	} else {
 		addGlobalPayload(command.data);
 	}
-	slashCommands[command.name] = command.callback;
+
+	if (!command.data.type || (command.data.type != "MESSAGE" && command.data.type != "USER")) {
+		console.log(`${name} is slash-command`);
+		//slash-command
+		slashCommands[name] = command.callback as (interaction: CommandInteraction) => void;
+	} else if (command.data.type && (command.data.type == "MESSAGE" || command.data.type == "USER")) {
+		console.log(`${name} is context-command`);
+		//context menu
+		contextMenus[name] = command.callback as (interaction: ContextMenuInteraction) => void;
+	}
 }
 
-function registerContextMenu(command: ContextMenu): void {
-	if (command.name.toLowerCase() != command.name) {
-		console.warn("name must be lowercase.");
-		return;
-	}
+function registerSlashCommand(command: SlashCommand): void {
+	registerCommand(command);
+}
 
-	if (command.guildId) {
-		addGuildPayload(command.guildId, command.data);
-	} else {
-		addGlobalPayload(command.data);
-	}
-	contextMenus[command.name] = command.callback;
+function registerContextCommand(command: ContextCommand): void {
+	registerCommand(command);
 }
 
 interface EventRegisterResult {
@@ -200,7 +223,7 @@ export {
 	getClient,
 	getPrefix,
 	registerEvent,
+	registerContextCommand,
 	registerMessageCommand,
 	registerSlashCommand,
-	registerContextMenu,
 };
