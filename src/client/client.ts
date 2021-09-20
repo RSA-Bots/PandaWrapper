@@ -9,8 +9,7 @@ import {
 } from "discord.js";
 import { pushPayloads } from "..";
 import type { ClientEvent } from "../interface/clientEvent";
-import type { MessageCommand } from "../interface/messageCommand";
-import type { ContextCommand, SlashCommand } from "./interfaces";
+import type { ContextCommand, MessageCommand, SlashCommand } from "./interfaces";
 import { addGlobalPayload, addGuildPayload } from "./payload";
 
 let instanceClient: Client | undefined;
@@ -66,10 +65,10 @@ function loginClient(token: string): Client {
 
 					// flag check
 					const flags = messageCommandData.permissions.flags;
-					if (flags && author.permissions.toArray().some(perm => flags.has(perm)))
-						messageCommandData
-							.callback(message, args)
-							.catch(err => message.reply(String(err)).catch(console.error.bind(console)));
+					if (flags && author.permissions.toArray().some(perm => flags.has(perm))) {
+						messageCommandData.callback(message, args);
+						return;
+					}
 
 					// role check
 					const allowed = messageCommandData.permissions.allowed;
@@ -79,10 +78,10 @@ function loginClient(token: string): Client {
 					const isDenied = denied == undefined ? false : author.roles.cache.some(role => denied.has(role.id));
 
 					if (isDenied) return;
-					if (hasPermission)
-						messageCommandData
-							.callback(message, args)
-							.catch(err => message.reply(err).catch(console.error.bind(console)));
+					if (hasPermission) {
+						messageCommandData.callback(message, args);
+						return;
+					}
 				}
 			}
 		},
@@ -93,7 +92,6 @@ function loginClient(token: string): Client {
 		once: false,
 		callback: (interaction: Interaction) => {
 			if (interaction.isCommand()) {
-				console.log(`${interaction.commandName} fired. [slash]`);
 				const commandCallback = slashCommands[interaction.commandName];
 
 				if (commandCallback != undefined) {
@@ -104,7 +102,6 @@ function loginClient(token: string): Client {
 						.catch(console.error.bind(console));
 				}
 			} else if (interaction.isContextMenu()) {
-				console.log(`${interaction.commandName} fired. [context]`);
 				const commandCallback = contextMenus[interaction.commandName];
 
 				if (commandCallback != undefined) {
@@ -206,6 +203,21 @@ function registerCommand(command: SlashCommand | ContextCommand): void {
 
 function registerSlashCommand(command: SlashCommand): void {
 	registerCommand(command);
+	if (command.messageData) {
+		registerMessageCommand({
+			name: command.data.name,
+			callback: command.messageData.callback,
+			permissions: command.messageData.permission,
+		});
+	}
+	if (command.contextData) {
+		registerContextCommand({
+			data: { name: command.data.name, type: command.contextData.type },
+			callback: command.contextData.callback,
+			guildConfig: command.guildConfig,
+			permissions: command.permissions,
+		});
+	}
 }
 
 function registerContextCommand(command: ContextCommand): void {
