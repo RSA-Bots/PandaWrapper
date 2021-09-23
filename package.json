@@ -1,6 +1,6 @@
 {
-	"name": "ts-bot-template",
-	"version": "0.0.0",
+	"name": "pandawrapper",
+	"version": "0.0.10",
 	"description": "",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
