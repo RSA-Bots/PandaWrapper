@@ -1,11 +1,12 @@
 import {
+	ButtonInteraction,
 	Client,
 	ClientEvents,
-	CommandInteraction,
 	ContextMenuInteraction,
 	Intents,
 	Interaction,
 	Message,
+	SelectMenuInteraction,
 } from "discord.js";
 import { pushPayloads } from "..";
 import type { ClientEvent } from "../interface/clientEvent";
@@ -16,8 +17,10 @@ let instanceClient: Client | undefined;
 let instancePrefix = "!";
 let hasLoggedIn = false;
 const messageCommands: { [index: string]: MessageCommand } = {};
-const slashCommands: { [index: string]: (interaction: CommandInteraction) => void } = {};
+const slashCommands: { [index: string]: SlashCommand } = {};
 const contextMenus: { [index: string]: (interaction: ContextMenuInteraction) => void } = {};
+const buttons: { [index: string]: (interaction: ButtonInteraction) => void } = {};
+const menus: { [index: string]: (interaction: SelectMenuInteraction) => void } = {};
 
 /**
  *
@@ -92,7 +95,17 @@ function loginClient(token: string): Client {
 		once: false,
 		callback: (interaction: Interaction) => {
 			if (interaction.isCommand()) {
-				const commandCallback = slashCommands[interaction.commandName];
+				const command = slashCommands[interaction.commandName];
+
+				if (command != undefined) {
+					command.callback(interaction, command.buttons, command.selects);
+				} else {
+					interaction
+						.reply("No callback has been assigned to this interaction.")
+						.catch(console.error.bind(console));
+				}
+			} else if (interaction.isContextMenu()) {
+				const commandCallback = contextMenus[interaction.commandName];
 
 				if (commandCallback != undefined) {
 					commandCallback(interaction);
@@ -101,8 +114,18 @@ function loginClient(token: string): Client {
 						.reply("No callback has been assigned to this interaction.")
 						.catch(console.error.bind(console));
 				}
-			} else if (interaction.isContextMenu()) {
-				const commandCallback = contextMenus[interaction.commandName];
+			} else if (interaction.isButton()) {
+				const commandCallback = buttons[interaction.customId];
+
+				if (commandCallback != undefined) {
+					commandCallback(interaction);
+				} else {
+					interaction
+						.reply("No callback has been assigned to this interaction.")
+						.catch(console.error.bind(console));
+				}
+			} else if (interaction.isSelectMenu()) {
+				const commandCallback = menus[interaction.customId];
 
 				if (commandCallback != undefined) {
 					commandCallback(interaction);
@@ -193,7 +216,7 @@ function registerCommand(command: SlashCommand | ContextCommand): void {
 	if (!command.data.type || (command.data.type != "MESSAGE" && command.data.type != "USER")) {
 		console.log(`${name} is slash-command`);
 		//slash-command
-		slashCommands[name] = command.callback as (interaction: CommandInteraction) => void;
+		slashCommands[name] = command as SlashCommand;
 	} else if (command.data.type && (command.data.type == "MESSAGE" || command.data.type == "USER")) {
 		console.log(`${name} is context-command`);
 		//context menu
@@ -217,6 +240,26 @@ function registerSlashCommand(command: SlashCommand): void {
 			guildConfig: command.guildConfig,
 			permissions: command.permissions,
 		});
+	}
+	if (command.buttons && command.buttons.length > 0) {
+		//registerButtons
+		for (const buttonRef of command.buttons) {
+			if (buttonRef.button.customId) {
+				buttons[buttonRef.button.customId] = buttonRef.callback;
+			} else {
+				console.warn("Could not register button: {}", buttonRef);
+			}
+		}
+	}
+	if (command.selects && command.selects.length > 0) {
+		//registerMenus
+		for (const menuRef of command.selects) {
+			if (menuRef.menu.customId) {
+				menus[menuRef.menu.customId] = menuRef.callback;
+			} else {
+				console.warn("Could not register select menu: {}", menuRef);
+			}
+		}
 	}
 }
 

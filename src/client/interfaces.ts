@@ -1,10 +1,14 @@
 import type {
 	ApplicationCommandData,
 	ApplicationCommandPermissionData,
+	ButtonInteraction,
 	CommandInteraction,
 	ContextMenuInteraction,
 	Message,
+	MessageButton,
+	MessageSelectMenu,
 	PermissionString,
+	SelectMenuInteraction,
 	Snowflake,
 } from "discord.js";
 
@@ -21,9 +25,19 @@ interface ContextCommand {
 	};
 }
 
+interface CommandButtons {
+	button: MessageButton;
+	callback: (interaction: ButtonInteraction) => void;
+}
+
+interface CommandMenus {
+	menu: MessageSelectMenu;
+	callback: (interaction: SelectMenuInteraction) => void;
+}
+
 interface SlashCommand {
 	data: ApplicationCommandData;
-	callback: (interaction: CommandInteraction) => void;
+	callback: (interaction: CommandInteraction, buttons?: [CommandButtons], selects?: [CommandMenus]) => void;
 	guildConfig: {
 		global: boolean;
 		guildId?: string;
@@ -40,6 +54,8 @@ interface SlashCommand {
 		type: "MESSAGE" | "USER";
 		callback: (interaction: ContextMenuInteraction) => void;
 	};
+	buttons?: [CommandButtons];
+	selects?: [CommandMenus];
 }
 
 interface MessagePermissions {
