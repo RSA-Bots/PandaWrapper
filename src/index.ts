@@ -1,3 +1,4 @@
+import { MessageEmbed } from "discord.js";
 import { ClientEvent } from "./client/ClientEvent";
 import { WrappedClient } from "./client/WrappedClient";
 import { ButtonCommand } from "./command/interaction/ButtonCommand";
@@ -14,3 +15,4 @@ export { WrappedClient, ClientEvent };
 export { ButtonCommand, ContextMenuCommand, SelectMenuCommand };
 export { SlashCommand, SlashCommandOption, SubCommand, SubCommandGroup };
 export { MessageCommand };
+export { MessageEmbed };
