@@ -3,9 +3,9 @@ import type { ContextMenuCallback } from "../../types";
 import { BaseCommand } from "../BaseCommand";
 
 export class ContextMenuCommand extends BaseCommand {
-	data: UserApplicationCommandData | MessageApplicationCommandData;
-	guildId: string | undefined;
-	callback: ContextMenuCallback | undefined;
+	private data: UserApplicationCommandData | MessageApplicationCommandData;
+	private guildId: string | undefined;
+	private callback: ContextMenuCallback | undefined;
 
 	constructor(name: string, type: "USER" | "MESSAGE") {
 		super(name);

@@ -1,5 +1,5 @@
 import type { ApplicationCommandData, ApplicationCommandPermissionData } from "discord.js";
-import { WrappedClient } from ".";
+import { WrappedClient } from "./WrappedClient";
 
 export class Payload {
 	private static guildPayload: { [index: string]: ApplicationCommandData[] } = {};
@@ -21,7 +21,6 @@ export class Payload {
 
 	static addGlobalPayload(commandData: ApplicationCommandData): void {
 		this.globalPayload.push(commandData);
-		// globalPermissions?
 	}
 
 	static pushPayloads(): void {

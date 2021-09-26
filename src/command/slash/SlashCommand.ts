@@ -1,17 +1,17 @@
-import type { ChatInputApplicationCommandData } from "discord.js";
-import type { SlashCommandCallback } from "../../types";
+import { ChatInputApplicationCommandData, MessageActionRow, MessageActionRowOptions } from "discord.js";
+import type { BuildComponentsData, SlashCommandCallback } from "../../types";
 import { BaseCommand } from "../BaseCommand";
 import type { SlashCommandOption } from "./SlashCommandOption";
 import type { SubCommand } from "./SubCommand";
 import type { SubCommandGroup } from "./SubCommandGroup";
 
 export class SlashCommand extends BaseCommand {
-	description: string;
+	private description: string;
 	/* TODO: type safety on mismatched option types */
-	data: ChatInputApplicationCommandData;
-	callback: SlashCommandCallback | undefined;
-	global = false;
-	guildId: string | undefined;
+	private data: ChatInputApplicationCommandData;
+	private callback: SlashCommandCallback | undefined;
+	private global = false;
+	private guildId: string | undefined;
 
 	constructor(name: string, description: string) {
 		super(name);
@@ -21,11 +21,12 @@ export class SlashCommand extends BaseCommand {
 			name,
 			description,
 			type: "CHAT_INPUT",
+			defaultPermission: false,
 		};
 	}
 
-	setDefaultPermissions(defaultPermission: boolean): this {
-		this.data.defaultPermission = defaultPermission;
+	setDefaultPermissions(): this {
+		this.data.defaultPermission = true;
 		return this;
 	}
 
@@ -48,13 +49,13 @@ export class SlashCommand extends BaseCommand {
 		if (this.data.options) {
 			let found = false;
 			for (const option of this.data.options) {
-				if (option.name === newOption.name) {
+				if (option.name === newOption.getName()) {
 					found = true;
 				}
 			}
-			if (!found) this.data.options.push(newOption);
+			if (!found) this.data.options.push(newOption.toDjsObject());
 		} else {
-			this.data.options = [newOption];
+			this.data.options = [newOption.toDjsObject()];
 		}
 
 		return this;
@@ -64,7 +65,7 @@ export class SlashCommand extends BaseCommand {
 		if (this.data.options) {
 			let found = false;
 			for (const option of this.data.options) {
-				if (option.name === command.name && option.type === command.getData().type) {
+				if (option.name === command.getName() && option.type === command.getData().type) {
 					found = true;
 				}
 			}
@@ -80,7 +81,7 @@ export class SlashCommand extends BaseCommand {
 		if (this.data.options) {
 			let found = false;
 			for (const option of this.data.options) {
-				if (option.name === group.name && option.type === group.getData().type) {
+				if (option.name === group.getName() && option.type === group.getData().type) {
 					found = true;
 				}
 			}
@@ -102,5 +103,22 @@ export class SlashCommand extends BaseCommand {
 
 	getData(): ChatInputApplicationCommandData {
 		return this.data;
+	}
+
+	buildComponents(
+		row1: BuildComponentsData,
+		row2?: BuildComponentsData,
+		row3?: BuildComponentsData,
+		row4?: BuildComponentsData,
+		row5?: BuildComponentsData
+	): (MessageActionRow | MessageActionRowOptions)[] {
+		const componentArray = [];
+		componentArray.push(new MessageActionRow().addComponents(row1.slice(0, 4)));
+		if (row2 && row2.length > 0) componentArray.push(new MessageActionRow().addComponents(row2.slice(0, 4)));
+		if (row3 && row3.length > 0) componentArray.push(new MessageActionRow().addComponents(row3.slice(0, 4)));
+		if (row4 && row4.length > 0) componentArray.push(new MessageActionRow().addComponents(row4.slice(0, 4)));
+		if (row5 && row5.length > 0) componentArray.push(new MessageActionRow().addComponents(row5.slice(0, 4)));
+
+		return componentArray;
 	}
 }

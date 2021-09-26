@@ -1,18 +1,18 @@
 import { Client, ClientEvents, Intents, Interaction, Message, User } from "discord.js";
+import type { ButtonCommand } from "../command/interaction/ButtonCommand";
+import { ContextMenuCommand } from "../command/interaction/ContextMenuCommand";
+import type { SelectMenuCommand } from "../command/interaction/SelectMenuCommand";
+import type { MessageCommand } from "../command/MessageCommand";
+import { SlashCommand } from "../command/slash/SlashCommand";
+import type { ButtonCallback, ContextMenuCallback, SelectMenuCallback, SlashCommandCallback } from "../types";
 import { ClientEvent } from "./ClientEvent";
-import type { ButtonCommand } from "./command/interaction/ButtonCommand";
-import { ContextMenuCommand } from "./command/interaction/ContextMenuCommand";
-import type { SelectMenuCommand } from "./command/interaction/SelectMenuCommand";
-import type { MessageCommand } from "./command/MessageCommand";
-import { SlashCommand } from "./command/slash/SlashCommand";
 import { Payload } from "./Payload";
-import type { ButtonCallback, ContextMenuCallback, SelectMenuCallback, SlashCommandCallback } from "./types";
 
 export class WrappedClient {
-	static client: Client;
-	prefix = "!";
-	messageCommands: { [index: string]: MessageCommand } = {};
-	commands: { [index: string]: SlashCommand | ContextMenuCommand | ButtonCommand | SelectMenuCommand } = {};
+	private static client: Client;
+	private prefix = "!";
+	private messageCommands: { [index: string]: MessageCommand } = {};
+	private commands: { [index: string]: SlashCommand | ContextMenuCommand | ButtonCommand | SelectMenuCommand } = {};
 
 	constructor(
 		prefix?: string,
@@ -48,7 +48,7 @@ export class WrappedClient {
 		);
 
 		this.registerEvent(
-			new ClientEvent("messageCreate", false).setCallback((message: Message) => {
+			new ClientEvent("messageCreate", false).setCallback(async (message: Message) => {
 				const args = message.content.split(" ");
 				const command = args.shift();
 
@@ -65,53 +65,51 @@ export class WrappedClient {
 
 						const permissions = commandData.getPermissions();
 						if (!permissions) {
-							callback(message, args);
+							await callback(message, args);
 							return;
 						}
 
 						const flags = permissions.flags;
 						if (flags && author.permissions.toArray().some(perm => flags.has(perm))) {
-							callback(message, args);
+							await callback(message, args);
 							return;
 						}
 
 						const allowed = permissions.allowed;
 						const denied = permissions.denied;
 						if (!allowed && !denied) {
-							callback(message, args);
+							await callback(message, args);
 							return;
 						}
 
 						if (denied && author.roles.cache.some(role => denied.has(role.id))) return;
 						if (allowed && author.roles.cache.some(role => allowed.has(role.id))) {
-							callback(message, args);
+							await callback(message, args);
 							return;
 						}
-
-						return;
 					}
 				}
 			})
 		);
 
 		this.registerEvent(
-			new ClientEvent("interactionCreate", false).setCallback((interaction: Interaction) => {
+			new ClientEvent("interactionCreate", false).setCallback(async (interaction: Interaction) => {
 				let callback = undefined;
 
 				if (interaction.isCommand()) {
-					callback = this.commands[interaction.commandName].callback as SlashCommandCallback;
+					callback = this.commands[interaction.commandName].getCallback() as SlashCommandCallback;
 					if (callback) {
-						callback(interaction, interaction.options["_hoistedOptions"]);
+						await callback(interaction, interaction.options["_hoistedOptions"]);
 					}
 				}
 				if (interaction.isButton()) {
-					callback = this.commands[interaction.customId].callback as ButtonCallback;
+					callback = this.commands[interaction.customId].getCallback() as ButtonCallback;
 					if (callback) {
 						callback(interaction);
 					}
 				}
 				if (interaction.isContextMenu()) {
-					callback = this.commands[interaction.commandName].callback as ContextMenuCallback;
+					callback = this.commands[interaction.commandName].getCallback() as ContextMenuCallback;
 					if (callback) {
 						let target: Message | User | undefined = undefined;
 
@@ -135,9 +133,9 @@ export class WrappedClient {
 					}
 				}
 				if (interaction.isSelectMenu()) {
-					callback = this.commands[interaction.customId].callback as SelectMenuCallback;
+					callback = this.commands[interaction.customId].getCallback() as SelectMenuCallback;
 					if (callback) {
-						callback(interaction);
+						callback(interaction, interaction.values);
 					}
 				}
 			})
@@ -150,7 +148,7 @@ export class WrappedClient {
 				console.log(`Registered ${event.name} as once.`);
 				WrappedClient.client.once(event.name, event.callback);
 			} else {
-				console.log(`Registered ${event.name} as once.`);
+				console.log(`Registered ${event.name} as on.`);
 				WrappedClient.client.on(event.name, event.callback);
 			}
 		}
@@ -158,38 +156,43 @@ export class WrappedClient {
 	}
 
 	registerMessageCommand(command: MessageCommand): boolean {
-		if (this.messageCommands[command.name]) {
-			console.warn(`A command with name [${command.name}] already exists.`);
+		if (this.messageCommands[command.getName()]) {
+			console.warn(`A command with name [${command.getName()}] already exists.`);
 			return false;
 		}
 		if (!command.getCallback()) {
-			console.warn(`${command.name} does not have a callback set.`);
+			console.warn(`${command.getName()} does not have a callback set.`);
 			return false;
 		}
 
-		this.messageCommands[command.name] = command;
+		this.messageCommands[command.getName()] = command;
 		return true;
 	}
 
-	registerCommandObject(command: SlashCommand | ContextMenuCommand | ButtonCommand | SelectMenuCommand): boolean {
-		if (this.commands[command.name]) {
-			console.warn(`A command with name [${command.name}] already exists.`);
-			return false;
-		}
+	registerCommandObject(
+		...newCommands: (SlashCommand | ButtonCommand | SelectMenuCommand | ContextMenuCommand)[]
+	): boolean {
+		for (const command of newCommands) {
+			const commandName = command.getName();
+			if (this.commands[commandName]) {
+				console.warn(`A command with name [${commandName}] already exists.`);
+				return false;
+			}
 
-		if (!command.getCallback()) {
-			console.warn(`${command.name} does not have a callback set.`);
-			return false;
-		}
+			if (!command.getCallback()) {
+				console.warn(`${commandName} does not have a callback set.`);
+				return false;
+			}
 
-		this.commands[command.name] = command;
+			this.commands[commandName] = command;
 
-		if (command instanceof SlashCommand || command instanceof ContextMenuCommand) {
-			const guildId = command.getGuildId();
-			if (guildId) {
-				Payload.addGuildPayload(guildId, command.getData(), command.getPermissions());
-			} else {
-				Payload.addGlobalPayload(command.getData());
+			if (command instanceof SlashCommand || command instanceof ContextMenuCommand) {
+				const guildId = command.getGuildId();
+				if (guildId) {
+					Payload.addGuildPayload(guildId, command.getData(), command.getPermissions());
+				} else {
+					Payload.addGlobalPayload(command.getData());
+				}
 			}
 		}
 

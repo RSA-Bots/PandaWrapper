@@ -1,11 +1,12 @@
+import type { ApplicationCommandChoicesData, ApplicationCommandNonOptionsData } from "discord.js";
 import type { SlashCommandChoice, SlashCommandOptionType } from "../../types";
 
 export class SlashCommandOption {
-	name: string;
-	description: string;
-	type: SlashCommandOptionType;
-	choices: SlashCommandChoice[] | undefined;
-	required = false;
+	private name: string;
+	private description: string;
+	private type: SlashCommandOptionType;
+	private choices: SlashCommandChoice[] | undefined;
+	private required = false;
 
 	constructor(name: string, description: string, type: SlashCommandOptionType) {
 		this.name = name;
@@ -41,5 +42,35 @@ export class SlashCommandOption {
 	setRequired(): this {
 		this.required = true;
 		return this;
+	}
+
+	getName(): string {
+		return this.name;
+	}
+
+	getDescription(): string {
+		return this.description;
+	}
+
+	getType(): SlashCommandOptionType {
+		return this.type;
+	}
+
+	getChoices(): SlashCommandChoice[] | undefined {
+		return this.choices;
+	}
+
+	getRequired(): boolean {
+		return this.required;
+	}
+
+	toDjsObject(): ApplicationCommandChoicesData | ApplicationCommandNonOptionsData {
+		return {
+			name: this.getName(),
+			description: this.getDescription(),
+			type: this.getType(),
+			required: this.getRequired(),
+			choices: this.getChoices(),
+		};
 	}
 }

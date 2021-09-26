@@ -2,9 +2,9 @@ import type { ApplicationCommandSubGroupData } from "discord.js";
 import type { SubCommand } from "./SubCommand";
 
 export class SubCommandGroup {
-	name: string;
-	description: string;
-	data: ApplicationCommandSubGroupData;
+	private name: string;
+	private description: string;
+	private data: ApplicationCommandSubGroupData;
 
 	constructor(name: string, description: string) {
 		this.name = name;
@@ -21,7 +21,7 @@ export class SubCommandGroup {
 		if (this.data.options) {
 			let found = false;
 			for (const option of this.data.options) {
-				if (option.name === command.name && option.type === command.getData().type) {
+				if (option.name === command.getName() && option.type === command.getData().type) {
 					found = true;
 				}
 			}
@@ -31,6 +31,14 @@ export class SubCommandGroup {
 		}
 
 		return this;
+	}
+
+	getName(): string {
+		return this.name;
+	}
+
+	getDescription(): string {
+		return this.description;
 	}
 
 	getData(): ApplicationCommandSubGroupData {

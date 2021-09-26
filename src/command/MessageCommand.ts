@@ -2,7 +2,7 @@ import type { PermissionString } from "discord.js";
 import type { MessageCallback, MessagePermissions } from "../types";
 
 export class MessageCommand {
-	name: string;
+	private name: string;
 	private callback: MessageCallback | undefined;
 	private permissions: MessagePermissions | undefined;
 
@@ -96,6 +96,10 @@ export class MessageCommand {
 		}
 
 		return this;
+	}
+
+	getName(): string {
+		return this.name;
 	}
 
 	getCallback(): MessageCallback | undefined {

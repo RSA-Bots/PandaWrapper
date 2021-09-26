@@ -2,9 +2,9 @@ import type { ApplicationCommandSubCommandData } from "discord.js";
 import type { SlashCommandOption } from "./SlashCommandOption";
 
 export class SubCommand {
-	name: string;
-	description: string;
-	data: ApplicationCommandSubCommandData;
+	private name: string;
+	private description: string;
+	private data: ApplicationCommandSubCommandData;
 
 	constructor(name: string, description: string) {
 		this.name = name;
@@ -21,16 +21,24 @@ export class SubCommand {
 		if (this.data.options) {
 			let found = false;
 			for (const option of this.data.options) {
-				if (option.name === newOption.name) {
+				if (option.name === newOption.getName()) {
 					found = true;
 				}
 			}
-			if (!found) this.data.options.push(newOption);
+			if (!found) this.data.options.push(newOption.toDjsObject());
 		} else {
-			this.data.options = [newOption];
+			this.data.options = [newOption.toDjsObject()];
 		}
 
 		return this;
+	}
+
+	getName(): string {
+		return this.name;
+	}
+
+	getDescription(): string {
+		return this.description;
 	}
 
 	getData(): ApplicationCommandSubCommandData {
