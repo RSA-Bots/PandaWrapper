@@ -1,6 +1,6 @@
 {
 	"name": "pandawrapper",
-	"version": "0.1.0-beta.7",
+	"version": "0.1.0-beta.8",
 	"description": "",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -12,7 +12,8 @@
 		"build": "tsc",
 		"start": "node dist/index.js",
 		"test": "npm run build && npm start",
-		"check": "npm run build && npm run lint"
+		"check": "npm run build && npm run lint",
+		"beta": "npm run build && npm publish --tag beta"
 	},
 	"author": "",
 	"license": "ISC",
