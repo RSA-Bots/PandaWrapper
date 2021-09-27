@@ -105,7 +105,7 @@ export class WrappedClient {
 				if (interaction.isButton()) {
 					callback = this.commands[interaction.customId].getCallback() as ButtonCallback;
 					if (callback) {
-						callback(interaction);
+						await callback(interaction);
 					}
 				}
 				if (interaction.isContextMenu()) {
@@ -129,13 +129,13 @@ export class WrappedClient {
 							}
 						}
 
-						callback(interaction, target);
+						await callback(interaction, target);
 					}
 				}
 				if (interaction.isSelectMenu()) {
 					callback = this.commands[interaction.customId].getCallback() as SelectMenuCallback;
 					if (callback) {
-						callback(interaction, interaction.values);
+						await callback(interaction, interaction.values);
 					}
 				}
 			})
@@ -188,10 +188,31 @@ export class WrappedClient {
 
 			if (command instanceof SlashCommand || command instanceof ContextMenuCommand) {
 				const guildId = command.getGuildId();
-				if (guildId) {
-					Payload.addGuildPayload(guildId, command.getData(), command.getPermissions());
+
+				if (command instanceof ContextMenuCommand) {
+					if (guildId) {
+						Payload.addGuildPayload(guildId, command.getData(), command.getPermissions());
+						return true;
+					} else {
+						console.warn(
+							`Must load a ContextMenu to a guild. [No guildId provided for ${command.getName()}`
+						);
+						return false;
+					}
 				} else {
-					Payload.addGlobalPayload(command.getData());
+					const guildId = command.getGuildId();
+					if (command.getGlobal()) {
+						Payload.addGlobalPayload(command.getData());
+						return true;
+					}
+					if (!command.getGlobal() && guildId == undefined) {
+						Payload.addExtraGuildPayload(command.getData(), command.getPermissions());
+						return true;
+					}
+					if (guildId != undefined) {
+						Payload.addGuildPayload(guildId, command.getData(), command.getPermissions());
+						return true;
+					}
 				}
 			}
 		}

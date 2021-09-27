@@ -3,6 +3,7 @@ import { WrappedClient } from "./WrappedClient";
 
 export class Payload {
 	private static guildPayload: { [index: string]: ApplicationCommandData[] } = {};
+	private static allGuildPayload: ApplicationCommandData[] = [];
 	private static globalPayload: ApplicationCommandData[] = [];
 	private static permissions: { [index: string]: ApplicationCommandPermissionData[] } = {};
 
@@ -14,6 +15,16 @@ export class Payload {
 		const payload = this.guildPayload[guildId] ?? [];
 		payload.push(commandData);
 		this.guildPayload[guildId] = payload;
+		if (permissionData && permissionData.length > 0) {
+			this.permissions[commandData.name] = permissionData;
+		}
+	}
+
+	static addExtraGuildPayload(
+		commandData: ApplicationCommandData,
+		permissionData?: ApplicationCommandPermissionData[]
+	): void {
+		this.allGuildPayload.push(commandData);
 		if (permissionData && permissionData.length > 0) {
 			this.permissions[commandData.name] = permissionData;
 		}
@@ -35,6 +46,10 @@ export class Payload {
 		client.guilds.cache.forEach(guild => {
 			const guildId = guild.id;
 			const payload = this.guildPayload[guildId];
+
+			for (const extra of this.allGuildPayload) {
+				payload.push(extra);
+			}
 
 			if (payload && payload.length > 0) {
 				const commands = guild.commands;

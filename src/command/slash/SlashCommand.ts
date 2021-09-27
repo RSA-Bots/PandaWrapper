@@ -105,6 +105,10 @@ export class SlashCommand extends BaseCommand {
 		return this.data;
 	}
 
+	getGlobal(): boolean {
+		return this.global;
+	}
+
 	buildComponents(
 		row1: BuildComponentsData,
 		row2?: BuildComponentsData,
