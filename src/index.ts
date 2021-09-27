@@ -9,10 +9,11 @@ import { SlashCommand } from "./command/slash/SlashCommand";
 import { SlashCommandOption } from "./command/slash/SlashCommandOption";
 import { SubCommand } from "./command/slash/SubCommand";
 import { SubCommandGroup } from "./command/slash/SubCommandGroup";
+import type { SlashCommandChoice } from "./types";
 
 export * from "./types";
 export { WrappedClient, ClientEvent };
 export { ButtonCommand, ContextMenuCommand, SelectMenuCommand };
-export { SlashCommand, SlashCommandOption, SubCommand, SubCommandGroup };
+export { SlashCommand, SlashCommandChoice, SlashCommandOption, SubCommand, SubCommandGroup };
 export { MessageCommand };
 export { MessageEmbed };
