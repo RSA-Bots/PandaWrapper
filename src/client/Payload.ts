@@ -45,7 +45,7 @@ export class Payload {
 
 		client.guilds.cache.forEach(guild => {
 			const guildId = guild.id;
-			const payload = this.guildPayload[guildId];
+			const payload = this.guildPayload[guildId] ?? [];
 
 			for (const extra of this.allGuildPayload) {
 				payload.push(extra);
