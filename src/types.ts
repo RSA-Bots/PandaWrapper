@@ -8,11 +8,17 @@ import type {
 	MessageButton,
 	MessageSelectMenu,
 	SelectMenuInteraction,
+	TextChannel,
+	ThreadChannel,
 	User,
 } from "discord.js";
 
 export type EventCallback<K extends keyof ClientEvents> = (...args: ClientEvents[K]) => Promise<void> | void;
-export type MessageCallback = (message: Message, args: string[]) => Promise<Message> | void;
+export type MessageCallback = (
+	message: Message,
+	channel: TextChannel | ThreadChannel,
+	args: string[]
+) => Promise<Message> | void;
 export type SlashCommandCallback = (
 	interaction: CommandInteraction,
 	args: CommandInteractionOption[]

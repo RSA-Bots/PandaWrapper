@@ -1,4 +1,15 @@
-import { Client, ClientEvents, Intents, Interaction, Message, User } from "discord.js";
+import {
+	Client,
+	ClientEvents,
+	DMChannel,
+	Intents,
+	Interaction,
+	Message,
+	NewsChannel,
+	TextChannel,
+	ThreadChannel,
+	User,
+} from "discord.js";
 import type { ButtonCommand } from "../command/interaction/ButtonCommand";
 import { ContextMenuCommand } from "../command/interaction/ContextMenuCommand";
 import type { SelectMenuCommand } from "../command/interaction/SelectMenuCommand";
@@ -60,31 +71,36 @@ export class WrappedClient {
 						if (!author) return;
 						if (author.user.bot) return;
 
+						if (!message.channel) return;
+						if (message.channel instanceof DMChannel) return;
+						if (message.channel instanceof NewsChannel) return;
+						const mChannel = message.channel as TextChannel | ThreadChannel;
+
 						const callback = commandData.getCallback();
 						if (!callback) return;
 
 						const permissions = commandData.getPermissions();
 						if (!permissions) {
-							await callback(message, args);
+							await callback(message, mChannel, args);
 							return;
 						}
 
 						const flags = permissions.flags;
 						if (flags && author.permissions.toArray().some(perm => flags.has(perm))) {
-							await callback(message, args);
+							await callback(message, mChannel, args);
 							return;
 						}
 
 						const allowed = permissions.allowed;
 						const denied = permissions.denied;
 						if (!allowed && !denied) {
-							await callback(message, args);
+							await callback(message, mChannel, args);
 							return;
 						}
 
 						if (denied && author.roles.cache.some(role => denied.has(role.id))) return;
 						if (allowed && author.roles.cache.some(role => allowed.has(role.id))) {
-							await callback(message, args);
+							await callback(message, mChannel, args);
 							return;
 						}
 					}
