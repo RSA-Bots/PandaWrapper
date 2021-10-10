@@ -3,11 +3,11 @@
 [![ci](https://github.com/RSA-Bots/PandaWrapper/actions/workflows/ci.yml/badge.svg)](https://github.com/RSA-Bots/PandaWrapper/actions/workflows/ci.yml)
 
 [![npm version](https://badge.fury.io/js/pandawrapper.svg)](https://badge.fury.io/js/pandawrapper)
-[![Version](https://img.shields.io/badge/npm_beta-v0.1.0--beta.9-yellow.svg)](https://badge.fury.io/js/pandawrapper)
+[![Version](https://img.shields.io/badge/npm_beta-v0.1.0--beta.10a-yellow.svg)](https://badge.fury.io/js/pandawrapper)
 [![NPM Downloads](https://img.shields.io/npm/dt/pandawrapper.svg)](https://www.npmjs.com/package/pandawrapper)
 
 [![Version](https://img.shields.io/badge/Github_Master-v0.0.0-red.svg)](https://github.com/RSA-Bots/PandaWrapper/tree/master)
-[![Version](https://img.shields.io/badge/Github_Develop-v0.1.0--beta.9-yellow.svg)](https://github.com/RSA-Bots/PandaWrapper/tree/develop)
+[![Version](https://img.shields.io/badge/Github_Develop-v0.1.0--beta.10a-yellow.svg)](https://github.com/RSA-Bots/PandaWrapper/tree/develop)
 [![Version](https://img.shields.io/badge/Discord.js_Version-v13.1-brightgreen.svg)](https://discord.js.org)
 
 Welcome to `PandaWrapper`, a Discord.JS wrapper in TypeScript.

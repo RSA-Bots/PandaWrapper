@@ -1,3 +1,4 @@
+import type { APIMessage } from "discord-api-types";
 import type {
 	ButtonInteraction,
 	ClientEvents,
@@ -18,11 +19,11 @@ export type MessageCallback = (
 	message: Message,
 	channel: TextChannel | ThreadChannel,
 	args: string[]
-) => Promise<Message> | void;
+) => Promise<Message | void> | void;
 export type SlashCommandCallback = (
 	interaction: CommandInteraction,
 	args: CommandInteractionOption[]
-) => Promise<void> | void;
+) => Promise<Message | APIMessage | void> | void;
 export type ContextMenuCallback = (
 	interaction: ContextMenuInteraction,
 	target: Message | User | undefined
