@@ -56,6 +56,11 @@ export class SelectMenuCommand extends BaseCommand {
 		return this.addFullOption({ label, description, value });
 	}
 
+	setOptions(options: SelectMenuOption[]): this {
+		this.options = options;
+		return this;
+	}
+
 	getCallback(): SelectMenuCallback | undefined {
 		return this.callback;
 	}
