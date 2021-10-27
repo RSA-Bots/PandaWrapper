@@ -1,6 +1,6 @@
 {
 	"name": "pandawrapper",
-	"version": "0.1.0-beta.11a",
+	"version": "0.1.0-beta.12a",
 	"description": "",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",

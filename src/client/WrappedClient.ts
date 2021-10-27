@@ -6,6 +6,7 @@ import {
 	Interaction,
 	Message,
 	NewsChannel,
+	PartialTypes,
 	TextChannel,
 	ThreadChannel,
 	User,
@@ -27,13 +28,14 @@ export class WrappedClient {
 
 	constructor(
 		prefix?: string,
-		intents = [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MEMBERS]
+		intents = [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MEMBERS],
+		partials: PartialTypes[] = []
 	) {
 		if (prefix) {
 			this.prefix = prefix;
 		}
 
-		WrappedClient.client = new Client({ intents });
+		WrappedClient.client = new Client({ intents, partials });
 	}
 
 	static getClient(): Client {
